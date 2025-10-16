@@ -1,11 +1,31 @@
-# .gitattributes
+# Auto detect text files and normalize line endings to LF in repository
 * text=auto
 
-# Force LF for these files
-*.sh text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-*.json text eol=lf
-*.js text eol=lf
+# Explicitly set line endings for specific file types
+*.java text eol=lf
 *.ts text eol=lf
+*.js text eol=lf
+*.json text eol=lf
 *.md text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.xml text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary files
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.class binary
+
+# Gradle wrapper should be executable
+gradlew text eol=lf
