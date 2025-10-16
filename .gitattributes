@@ -1,12 +1,16 @@
-# Auto detect text files and normalize line endings to LF in repository
+# .gitattributes
 * text=auto
 
-# Explicitly set line endings for specific file types
-*.java text eol=lf
-*.ts text eol=lf
-*.js text eol=lf
+# Force LF for these files
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
 *.json text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
 *.md text eol=lf
+<<<<<<< Updated upstream
+=======
 *.gradle text eol=lf
 *.properties text eol=lf
 *.xml text eol=lf
@@ -29,3 +33,14 @@
 
 # Gradle wrapper should be executable
 gradlew text eol=lf
+
+
+# Docker configuration
+docker-compose.yml text eol=lf
+
+# Git configuration
+.gitignore text eol=lf
+
+
+.gitattributes text eol=lf
+>>>>>>> Stashed changes
