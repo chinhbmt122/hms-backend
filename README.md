@@ -39,14 +39,44 @@ npx nx --version
 npx nx graph
 ```
 
-## Project Structure
+#### Current Services
+
+**NestJS Services:**
+- **API Gateway** (Port 3000) - HTTP entry point, routing
+- **Patient Service** (Port 3001) - Example business service
+
+**Java Services:**
+- **Auth Service** (Port 8081) - Authentication & security (for CI/CD testing)
+
+**Shared Libraries:**
+- **@hospital/shared/constants** - Service configuration, enums
+- **@hospital/shared/dto** - Data Transfer Objects
+- **@hospital/shared/utils** - Utility functions
+
+#### Services to be Added Later
+
+The team will decide on implementation technology for:
+- Appointment Service
+- Billing Service
+- Medical Examination Service
+- HR Service
+- Report Service
+- Notification Service
+
+### Project Structure
 ```
 hms-backend/
-├── apps/           # Microservices applications
-├── libs/           # Shared libraries
-├── tools/          # Custom tools and scripts
-├── nx.json         # Nx configuration
-└── package.json    # Dependencies
+├── apps/
+│   ├── api-gateway/         # NestJS - HTTP Gateway
+│   ├── patient-service/     # NestJS - Business logic example
+│   └── auth-service/        # Java - Security example
+├── libs/
+│   └── shared/
+│       ├── constants/       # Shared configuration
+│       ├── dto/            # Data Transfer Objects
+│       └── utils/          # Utilities
+├── nx.json
+└── package.json
 ```
 
 ## Team Members
@@ -94,7 +124,13 @@ npx nx graph
 - [x] GitHub repository configured
 - [x] Documentation initialized
 
-⏳ **Phase 2: Service Architecture** - In Progress
+
+✅ **Phase 2: Minimal Core Services** - COMPLETE
+- [x] API Gateway (NestJS)
+- [x] Patient Service (NestJS)
+- [x] Auth Service (Java)
+- [x] Shared libraries (constants, dto, utils)
+- [x] Both NestJS and Java validated
 
 ## Support
 
