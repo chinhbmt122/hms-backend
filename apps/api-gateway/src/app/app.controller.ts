@@ -1,12 +1,23 @@
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service';
+import { ApiGatewayService } from './app.service';
+import { ClientFactory } from './Clients/ClientFactory';
+import { ClientConstant, PatientMessages } from '@hms-backend/constants';
 
 @Controller()
-export class AppController {
-  constructor(private readonly appService: AppService) {}
+export class ApiGatewayController {
+  constructor(private readonly gatewayService: ApiGatewayService) {}
+
+  @Get('/users')
+  async getUsers() {
+    const client = ClientFactory.getInstance().getClient(
+      ClientConstant.PATIENT_SERVICE
+    );
+
+    return client.send(PatientMessages.CREATE_PATIENT, {});
+  }
 
   @Get()
-  getData() {
-    return this.appService.getData();
+  async getAuth() {
+    return this.gatewayService.getUsers();
   }
 }
