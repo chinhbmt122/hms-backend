@@ -7,7 +7,8 @@
     "build": {
       "executor": "@nx/gradle:gradle",
       "options": {
-        "taskName": "build"
+        "taskName": "build",
+        "cwd": "apps/auth-service"
       }
     },
     "bootRun": {
@@ -32,6 +33,12 @@
       "executor": "@nx/gradle:gradle",
       "options": {
         "taskName": "clean"
+      }
+    },
+    "serve": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "bootRun"
       }
     }
   },

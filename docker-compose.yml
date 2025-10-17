@@ -10,42 +10,46 @@ services:
     image: postgres:${POSTGRES_VERSION:-16-alpine}
     container_name: postgres-patient
     restart: unless-stopped
-    
+
     environment:
       POSTGRES_DB: ${PATIENT_DB_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8'
       PGDATA: /var/lib/postgresql/data/pgdata
-    
+
+    env_file:
+      - .env
+
     ports:
-      - "${PATIENT_DB_PORT:-5433}:5432"
-    
+      - '${PATIENT_DB_PORT:-5433}:5432'
+
     volumes:
       - postgres-patient-data:/var/lib/postgresql/data
-    
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${PATIENT_DB_NAME}"]
+      test:
+        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${PATIENT_DB_NAME}']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-    
+
     deploy:
       resources:
         limits:
-          memory: ${POSTGRES_MEMORY_LIMIT:-512m}
+          memory: 512m
         reservations:
           memory: 128m
-    
+
     networks:
       - hospital-network
-    
+
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
   # ==========================================
   # PostgreSQL - Auth Service Database
@@ -54,42 +58,45 @@ services:
     image: postgres:${POSTGRES_VERSION:-16-alpine}
     container_name: postgres-auth
     restart: unless-stopped
-    
+
     environment:
       POSTGRES_DB: ${AUTH_DB_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8"
+      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8'
       PGDATA: /var/lib/postgresql/data/pgdata
-    
+
+    env_file:
+      - .env
+
     ports:
-      - "${AUTH_DB_PORT:-5434}:5432"
-    
+      - '${AUTH_DB_PORT:-5434}:5432'
+
     volumes:
       - postgres-auth-data:/var/lib/postgresql/data
-    
+
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${AUTH_DB_NAME}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${AUTH_DB_NAME}']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-    
+
     deploy:
       resources:
         limits:
-          memory: ${POSTGRES_MEMORY_LIMIT:-512m}
+          memory: 512m
         reservations:
           memory: 128m
-    
+
     networks:
       - hospital-network
-    
+
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
   # ==========================================
   # Redis - Caching and Session Management
@@ -98,7 +105,7 @@ services:
     image: redis:${REDIS_VERSION:-7-alpine}
     container_name: redis
     restart: unless-stopped
-    
+
     command: >
       redis-server
       --requirepass ${REDIS_PASSWORD}
@@ -106,35 +113,35 @@ services:
       --appendfsync everysec
       --maxmemory 256mb
       --maxmemory-policy allkeys-lru
-    
+
     ports:
-      - "${REDIS_PORT:-6379}:6379"
-    
+      - '${REDIS_PORT:-6379}:6379'
+
     volumes:
       - redis-data:/data
-    
+
     healthcheck:
-      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
-    
+
     deploy:
       resources:
         limits:
-          memory: ${REDIS_MEMORY_LIMIT:-256m}
+          memory: 256m
         reservations:
           memory: 64m
-    
+
     networks:
       - hospital-network
-    
+
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
   # ==========================================
   # RabbitMQ - Message Broker
@@ -143,43 +150,46 @@ services:
     image: rabbitmq:${RABBITMQ_VERSION:-3.13-management-alpine}
     container_name: rabbitmq
     restart: unless-stopped
-    
+
     hostname: rabbitmq-hospital
-    
+
+    env_file:
+      - .env
+
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
       RABBITMQ_DEFAULT_VHOST: /
-    
+
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
-    
+      - '${RABBITMQ_PORT:-5672}:5672'
+      - '${RABBITMQ_MANAGEMENT_PORT:-15672}:15672'
+
     volumes:
       - rabbitmq-data:/var/lib/rabbitmq
-    
+
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
-    
+
     deploy:
       resources:
         limits:
-          memory: ${RABBITMQ_MEMORY_LIMIT:-512m}
+          memory: 512m
         reservations:
           memory: 128m
-    
+
     networks:
       - hospital-network
-    
+
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
   # ==========================================
   # pgAdmin - PostgreSQL Management UI
@@ -188,40 +198,43 @@ services:
     image: dpage/pgadmin4:${PGADMIN_VERSION:-latest}
     container_name: pgadmin
     restart: unless-stopped
-    
+
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
-    
+
+    env_file:
+      - .env
+
     ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    
+      - '${PGADMIN_PORT:-5050}:80'
+
     volumes:
       - pgadmin-data:/var/lib/pgadmin
-    
+
     depends_on:
       postgres-patient:
         condition: service_healthy
       postgres-auth:
         condition: service_healthy
-    
+
     deploy:
       resources:
         limits:
-          memory: ${PGADMIN_MEMORY_LIMIT:-256m}
+          memory: 256m
         reservations:
           memory: 64m
-    
+
     networks:
       - hospital-network
-    
+
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 
 # ============================================
 # Named Volumes - Persistent Data Storage
@@ -230,19 +243,19 @@ volumes:
   postgres-patient-data:
     name: hospital-postgres-patient-data
     driver: local
-  
+
   postgres-auth-data:
     name: hospital-postgres-auth-data
     driver: local
-  
+
   redis-data:
     name: hospital-redis-data
     driver: local
-  
+
   rabbitmq-data:
     name: hospital-rabbitmq-data
     driver: local
-  
+
   pgadmin-data:
     name: hospital-pgadmin-data
     driver: local
