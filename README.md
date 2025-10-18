@@ -73,6 +73,7 @@ hms-backend/
 | **Git** | Latest | [Download](https://git-scm.com/) |
 
 ### **Verify Installation**
+
 ```bash
 node --version    # Should show v20.x.x
 java --version    # Should show 21.x.x
@@ -89,6 +90,7 @@ npm --version     # Should show 10.x.x
 git clone https://github.com/chinhbmt122/hms-backend.git
 cd hms-backend
 ```
+
 
 ### **2. Install Dependencies**
 ```bash
