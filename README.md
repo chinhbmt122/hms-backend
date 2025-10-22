@@ -47,16 +47,21 @@ A microservices-based hospital management system built with **Nx Monorepo**, **N
 hms-backend/
 ├── .github/workflows/         # CI/CD pipelines
 ├── apps/                       # Microservices
-│   ├── api-gateway/           # NestJS - API Gateway
-│   ├── patient-service/       # NestJS - Patient Management
-│   └── auth-service/          # Spring Boot - Authentication
+│   ├── api-gateway/           # NestJS - HTTP REST API (Port 3000)
+│   ├── patient-service/       # NestJS - Microservice (RabbitMQ only, NO HTTP port)
+│   └── auth-service/          # Spring Boot - HTTP REST API (Port 8081)
 ├── libs/                       # Shared libraries
-│   └── shared/                # Common utilities
+│   └── shared/
+│       ├── constants/         # Message patterns, client configs
+│       ├── dto/               # Data Transfer Objects
+│       └── utils/             # Common utilities
 ├── docker-compose.yml         # Infrastructure setup
 ├── .env                       # Environment variables
 ├── nx.json                    # Nx configuration
 └── package.json               # Dependencies
 ```
+
+**Note:** Patient Service is a pure microservice with NO HTTP port - it communicates only via RabbitMQ queue "patient".
 
 ---
 
@@ -135,13 +140,33 @@ npx nx serve patient-service
 
 ### **6. Verify Setup**
 ```bash
-# Check API Gateway
+# Check API Gateway health
 curl http://localhost:3000/api
 
-# Check Patient Service
-curl http://localhost:3001/api
+# List all patients
+curl http://localhost:3000/api/patients
 
-# Access RabbitMQ Management
+# Create a test patient
+curl -X POST http://localhost:3000/api/patients \
+  -H "Content-Type: application/json" \
+  -d '{
+    "firstName": "Test",
+    "lastName": "User",
+    "dateOfBirth": "1990-01-01",
+    "gender": "MALE",
+    "phone": "1234567890",
+    "address": "123 Test St",
+    "emergencyContact": {
+      "name": "Emergency Contact",
+      "phone": "0987654321",
+      "relationship": "Friend"
+    }
+  }'
+
+# NOTE: Patient Service has NO HTTP port!
+# It only communicates via RabbitMQ queue "patient"
+
+# Access RabbitMQ Management UI
 open http://localhost:15672
 # Login: hospital / rabbitmq_hospital_pass_2024
 
@@ -154,26 +179,78 @@ open http://localhost:5050
 
 ## ��� Infrastructure (Docker)
 
+### **Modular Docker Compose Architecture**
+
+The project uses a **modular Docker Compose structure** where each service has its own `docker-compose.yml` file, and the root compose file orchestrates all services centrally.
+
+**Structure:**
+```
+hms-backend/
+├── docker-compose.yml                          # Root orchestrator (uses 'include')
+├── infrastructure/
+│   └── docker-compose.yml                      # Shared services (RabbitMQ, Redis, pgAdmin)
+└── apps/
+    ├── patient-service/
+    │   └── docker-compose.yml                  # Patient DB (postgres-patient)
+    └── auth-service/
+        └── docker-compose.yml                  # Auth DB (postgres-auth)
+```
+
+**Benefits:**
+- **Modularity**: Each service's infrastructure is self-contained
+- **Flexibility**: Start individual services or all together
+- **Maintainability**: Easy to update service-specific configurations
+- **Centralized Control**: Root compose file manages all services
+
+**Usage:**
+```bash
+# Start all services from root (recommended)
+docker-compose up -d
+
+# Start specific service infrastructure
+docker-compose -f apps/patient-service/docker-compose.yml up -d
+
+# Start only shared infrastructure
+docker-compose -f infrastructure/docker-compose.yml up -d
+
+# View all services
+docker-compose ps
+
+# Stop all services
+docker-compose down
+```
+
 ### **Services Overview**
 
-| Service | Port | Description | Credentials |
-|---------|------|-------------|-------------|
-| **PostgreSQL (Patient)** | 5433 | Patient service database | hospital / hospital123 |
-| **PostgreSQL (Auth)** | 5434 | Auth service database | hospital / hospital123 |
-| **Redis** | 6379 | Cache & sessions | Password: redis_hospital_pass_2024 |
-| **RabbitMQ** | 5672 | Message broker | hospital / rabbitmq_hospital_pass_2024 |
-| **RabbitMQ Management** | 15672 | Web UI | http://localhost:15672 |
-| **pgAdmin** | 5050 | Database management | http://localhost:5050 |
+| Service | Port | Type | Description |
+|---------|------|------|-------------|
+| **API Gateway** | 3000 | HTTP Server | REST API endpoints for all services |
+| **Patient Service** | - | Microservice | RabbitMQ queue listener (NO HTTP port) |
+| **Auth Service** | 8081 | HTTP Server | Spring Boot authentication service |
+| **PostgreSQL (Patient)** | 5433 | Database | Patient data storage |
+| **PostgreSQL (Auth)** | 5434 | Database | Auth data storage |
+| **Redis** | 6379 | Cache | Session management & caching |
+| **RabbitMQ** | 5672 | Message Broker | Microservice communication |
+| **RabbitMQ Management** | 15672 | Web UI | Admin panel: http://localhost:15672 |
+| **pgAdmin** | 5050 | Web UI | DB management: http://localhost:5050 |
+
+**Credentials:**
+- PostgreSQL: `hospital` / `hospital123`
+- Redis: Password: `redis_hospital_pass_2024`
+- RabbitMQ: `hospital` / `rabbitmq_hospital_pass_2024`
+- pgAdmin: `admin@hospital.com` / `pgadmin_hospital_pass_2024`
 
 ### **Docker Commands**
+
+**All Services (from root):**
 ```bash
-# Start all infrastructure
+# Start all infrastructure (recommended)
 docker-compose up -d
 
 # Stop all infrastructure
 docker-compose down
 
-# View logs
+# View logs for all services
 docker-compose logs -f
 
 # View specific service logs
@@ -181,7 +258,7 @@ docker-compose logs -f postgres-patient
 docker-compose logs -f rabbitmq
 docker-compose logs -f redis
 
-# Restart a service
+# Restart a specific service
 docker-compose restart postgres-patient
 
 # Stop and remove everything (including volumes)
@@ -189,6 +266,33 @@ docker-compose down -v
 
 # Check service health
 docker-compose ps
+```
+
+**Individual Service Management:**
+```bash
+# Start only patient service database
+docker-compose -f apps/patient-service/docker-compose.yml up -d
+
+# Start only auth service database
+docker-compose -f apps/auth-service/docker-compose.yml up -d
+
+# Start only shared infrastructure (RabbitMQ, Redis, pgAdmin)
+docker-compose -f infrastructure/docker-compose.yml up -d
+
+# Stop specific service infrastructure
+docker-compose -f apps/patient-service/docker-compose.yml down
+```
+
+**Network Management:**
+```bash
+# Create the shared network (required before first run)
+docker network create hospital-network
+
+# List all networks
+docker network ls
+
+# Inspect network connections
+docker network inspect hospital-network
 ```
 
 ### **Database Connection Strings**
