@@ -1,269 +1,45 @@
 # ============================================
 # Hospital Management System Infrastructure
+# Modular Docker Compose Configuration
+# ============================================
+#
+# This file orchestrates all service infrastructure
+# by including individual service compose files.
+#
+# Usage:
+#   docker-compose up -d              # Start all services
+#   docker-compose down               # Stop all services
+#   docker-compose down -v            # Stop and remove volumes
+#   docker-compose ps                 # List running services
+#   docker-compose logs -f [service]  # View logs
+#
+# Structure:
+#   - infrastructure/docker-compose.yml (RabbitMQ, Redis, pgAdmin)
+#   - apps/patient-service/docker-compose.yml (Patient DB)
+#   - apps/auth-service/docker-compose.yml (Auth DB)
 # ============================================
 
-services:
-  # ==========================================
-  # PostgreSQL - Patient Service Database
-  # ==========================================
-  postgres-patient:
-    image: postgres:${POSTGRES_VERSION:-16-alpine}
-    container_name: postgres-patient
-    restart: unless-stopped
+include:
+  # Shared Infrastructure Services
+  - path: infrastructure/docker-compose.yml
+    env_file: .env
 
-    environment:
-      POSTGRES_DB: ${PATIENT_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8'
-      PGDATA: /var/lib/postgresql/data/pgdata
+  # Patient Service Database
+  - path: apps/patient-service/docker-compose.yml
+    env_file: .env
 
-    env_file:
-      - .env
-
-    ports:
-      - '${PATIENT_DB_PORT:-5433}:5432'
-
-    volumes:
-      - postgres-patient-data:/var/lib/postgresql/data
-
-    healthcheck:
-      test:
-        ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${PATIENT_DB_NAME}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-        reservations:
-          memory: 128m
-
-    networks:
-      - hospital-network
-
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  # ==========================================
-  # PostgreSQL - Auth Service Database
-  # ==========================================
-  postgres-auth:
-    image: postgres:${POSTGRES_VERSION:-16-alpine}
-    container_name: postgres-auth
-    restart: unless-stopped
-
-    environment:
-      POSTGRES_DB: ${AUTH_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_INITDB_ARGS: '--encoding=UTF-8 --lc-collate=en_US.UTF-8 --lc-ctype=en_US.UTF-8'
-      PGDATA: /var/lib/postgresql/data/pgdata
-
-    env_file:
-      - .env
-
-    ports:
-      - '${AUTH_DB_PORT:-5434}:5432'
-
-    volumes:
-      - postgres-auth-data:/var/lib/postgresql/data
-
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${AUTH_DB_NAME}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-        reservations:
-          memory: 128m
-
-    networks:
-      - hospital-network
-
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  # ==========================================
-  # Redis - Caching and Session Management
-  # ==========================================
-  redis:
-    image: redis:${REDIS_VERSION:-7-alpine}
-    container_name: redis
-    restart: unless-stopped
-
-    command: >
-      redis-server
-      --requirepass ${REDIS_PASSWORD}
-      --appendonly yes
-      --appendfsync everysec
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
-
-    ports:
-      - '${REDIS_PORT:-6379}:6379'
-
-    volumes:
-      - redis-data:/data
-
-    healthcheck:
-      test: ['CMD', 'redis-cli', '--raw', 'incr', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-    deploy:
-      resources:
-        limits:
-          memory: 256m
-        reservations:
-          memory: 64m
-
-    networks:
-      - hospital-network
-
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  # ==========================================
-  # RabbitMQ - Message Broker
-  # ==========================================
-  rabbitmq:
-    image: rabbitmq:${RABBITMQ_VERSION:-3.13-management-alpine}
-    container_name: rabbitmq
-    restart: unless-stopped
-
-    hostname: rabbitmq-hospital
-
-    env_file:
-      - .env
-
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-      RABBITMQ_DEFAULT_VHOST: /
-
-    ports:
-      - '${RABBITMQ_PORT:-5672}:5672'
-      - '${RABBITMQ_MANAGEMENT_PORT:-15672}:15672'
-
-    volumes:
-      - rabbitmq-data:/var/lib/rabbitmq
-
-    healthcheck:
-      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-    deploy:
-      resources:
-        limits:
-          memory: 512m
-        reservations:
-          memory: 128m
-
-    networks:
-      - hospital-network
-
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
-
-  # ==========================================
-  # pgAdmin - PostgreSQL Management UI
-  # ==========================================
-  pgadmin:
-    image: dpage/pgadmin4:${PGADMIN_VERSION:-latest}
-    container_name: pgadmin
-    restart: unless-stopped
-
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
-
-    env_file:
-      - .env
-
-    ports:
-      - '${PGADMIN_PORT:-5050}:80'
-
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-
-    depends_on:
-      postgres-patient:
-        condition: service_healthy
-      postgres-auth:
-        condition: service_healthy
-
-    deploy:
-      resources:
-        limits:
-          memory: 256m
-        reservations:
-          memory: 64m
-
-    networks:
-      - hospital-network
-
-    logging:
-      driver: 'json-file'
-      options:
-        max-size: '10m'
-        max-file: '3'
+  # Auth Service Database
+  - path: apps/auth-service/docker-compose.yml
+    env_file: .env
 
 # ============================================
-# Named Volumes - Persistent Data Storage
+# Network Configuration
 # ============================================
-volumes:
-  postgres-patient-data:
-    name: hospital-postgres-patient-data
-    driver: local
-
-  postgres-auth-data:
-    name: hospital-postgres-auth-data
-    driver: local
-
-  redis-data:
-    name: hospital-redis-data
-    driver: local
-
-  rabbitmq-data:
-    name: hospital-rabbitmq-data
-    driver: local
-
-  pgadmin-data:
-    name: hospital-pgadmin-data
-    driver: local
-
-# ============================================
-# Networks - Service Isolation
+# The hospital-network must be created before starting services
+# Run: docker network create hospital-network
 # ============================================
 networks:
   hospital-network:
     name: ${NETWORK_NAME:-hospital-network}
     driver: bridge
+    external: true
