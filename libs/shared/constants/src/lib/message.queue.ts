@@ -11,3 +11,7 @@ export const PatientMessages = {
   DELETE_PATIENT: 'patient.delete_patient',
   RESTORE_PATIENT: 'patient.restore_patient',
 };
+
+export const EmailMessages = {
+  HELLO: 'email.hello',
+};

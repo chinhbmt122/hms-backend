@@ -1,19 +1,32 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { ApiGatewayController } from './app.controller';
-import { ApiGatewayService } from './app.service';
-import { PatientController } from './controllers/patient.controller';
-import { HttpModule } from '@nestjs/axios';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // Makes ConfigModule available globally
-      envFilePath: '.env', // Path to .env file
-    }),
-    HttpModule,
+    ClientsModule.register([
+      {
+        name: 'AUTH_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 3001,
+        },
+      },
+    ]),
+    ClientsModule.register([
+      {
+        name: 'EMAIL_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 3002,
+        },
+      },
+    ]),
   ],
-  controllers: [ApiGatewayController, PatientController],
-  providers: [ApiGatewayService],
+  controllers: [AppController],
+  providers: [AppService],
 })
 export class AppModule {}
