@@ -236,6 +236,17 @@ services:
         max-size: '10m'
         max-file: '3'
 
+  employee-service1:
+    container_name: employee-service1
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_NAME: employee-service
+    networks:
+      - hospital-network
+
+
 # ============================================
 # Named Volumes - Persistent Data Storage
 # ============================================
