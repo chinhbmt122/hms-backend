@@ -14,20 +14,25 @@ import { MedicineResponse } from './dto/medicine-response.dto';
 import { MedicineRequest } from './dto/medicine-request.dto';
 import { PageResponse } from 'src/common/dto/page-response';
 import { Message } from 'src/common/decorators/message.decorator';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('medicines')
 export class MedicinesController {
     constructor(private readonly medicinesService: MedicinesService) {}
 
     @Get()
+    @ApiQuery({ name: 'page', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    @ApiQuery({ name: 'filter', required: false })
     @Message('Lấy danh sách thuốc thành công')
     findAll(
         @Query('page') page?: string,
         @Query('limit') limit?: string,
+        @Query('filter') filter?: string,
     ): Promise<PageResponse<MedicineResponse>> {
         const pageNumber = page ? parseInt(page, 10) : 1;
         const limitNumber = limit ? parseInt(limit, 10) : 10;
-        return this.medicinesService.findAll(pageNumber, limitNumber);
+        return this.medicinesService.findAll(pageNumber, limitNumber, filter);
     }
 
     @Get(':id')

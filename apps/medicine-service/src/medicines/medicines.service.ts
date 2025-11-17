@@ -7,6 +7,8 @@ import { plainToInstance } from 'class-transformer';
 import { MedicineRequest } from './dto/medicine-request.dto';
 import { Category } from 'src/categories/entities/category.entity';
 import { PageResponse } from 'src/common/dto/page-response';
+import { parse } from '@rsql/parser';
+import { applyRsql } from 'src/common/utils/ASTHelper';
 
 @Injectable()
 export class MedicinesService {
@@ -16,12 +18,21 @@ export class MedicinesService {
         @InjectRepository(Category)
         private readonly categoryRepository: Repository<Category>,
     ) {}
-    async findAll(page: number, limit: number): Promise<PageResponse<MedicineResponse>> {
-        const [medicines, totalItems] = await this.medicineRepository.findAndCount({
-            relations: ['category'],
-            skip: (page - 1) * limit,
-            take: limit,
-        });
+    async findAll(
+        page: number,
+        limit: number,
+        filter: string | undefined,
+    ): Promise<PageResponse<MedicineResponse>> {
+        const qb = this.medicineRepository
+            .createQueryBuilder('medicine')
+            .leftJoinAndSelect('medicine.category', 'category');
+
+        if (filter) {
+            const ast = parse(filter);
+            applyRsql(qb, ast, 'medicine');
+        }
+        qb.skip((page - 1) * limit).take(limit);
+        const [medicines, totalItems] = await qb.getManyAndCount();
 
         const totalPages = Math.ceil(totalItems / limit);
 

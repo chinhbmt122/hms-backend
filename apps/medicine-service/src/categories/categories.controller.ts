@@ -14,20 +14,25 @@ import { CategoryResponse } from './dto/category-response.dto';
 import { CategoryRequest } from './dto/category-request.dto';
 import { PageResponse } from 'src/common/dto/page-response';
 import { Message } from 'src/common/decorators/message.decorator';
+import { ApiQuery } from '@nestjs/swagger';
 
 @Controller('categories')
 export class CategoriesController {
     constructor(private readonly categoriesService: CategoriesService) {}
 
     @Get()
+    @ApiQuery({ name: 'page', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    @ApiQuery({ name: 'filter', required: false })
     @Message('Lấy danh sách loại thuốc thành công')
     findAll(
         @Query('page') page?: string,
         @Query('limit') limit?: string,
+        @Query('filter') filter?: string,
     ): Promise<PageResponse<CategoryResponse>> {
         const pageNumber = page ? parseInt(page, 10) : 1;
         const limitNumber = limit ? parseInt(limit, 10) : 10;
-        return this.categoriesService.findAll(pageNumber, limitNumber);
+        return this.categoriesService.findAll(pageNumber, limitNumber, filter);
     }
 
     @Get(':id')

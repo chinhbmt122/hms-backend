@@ -6,6 +6,8 @@ import { CategoryRequest } from './dto/category-request.dto';
 import { CategoryResponse } from './dto/category-response.dto';
 import { plainToInstance } from 'class-transformer';
 import { PageResponse } from 'src/common/dto/page-response';
+import { parse } from '@rsql/parser';
+import { applyRsql } from 'src/common/utils/ASTHelper';
 
 @Injectable()
 export class CategoriesService {
@@ -14,11 +16,18 @@ export class CategoriesService {
         private readonly categoryRepository: Repository<Category>,
     ) {}
 
-    async findAll(page: number, limit: number): Promise<PageResponse<CategoryResponse>> {
-        const [categories, totalItems] = await this.categoryRepository.findAndCount({
-            skip: (page - 1) * limit,
-            take: limit,
-        });
+    async findAll(
+        page: number,
+        limit: number,
+        filter: string | undefined,
+    ): Promise<PageResponse<CategoryResponse>> {
+        const qb = this.categoryRepository.createQueryBuilder('category');
+        if (filter) {
+            const ast = parse(filter);
+            applyRsql(qb, ast, 'category');
+        }
+        qb.skip((page - 1) * limit).take(limit);
+        const [categories, totalItems] = await qb.getManyAndCount();
         const totalPages = Math.ceil(totalItems / limit);
         categories.map((category) => plainToInstance(CategoryResponse, category));
         return {
