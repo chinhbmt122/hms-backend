@@ -4,61 +4,51 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from 'typeorm';
-import { Gender, BloodGroup, EmergencyContactDto } from '@hms-backend/dto';
+import { Gender } from '@hms-backend/dto';
 
 @Entity('patients')
 export class Patient {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 50 })
-  firstName: string;
+  @Column({ type: 'int', nullable: false })
+  account_id: number;
 
-  @Column({ length: 50 })
-  lastName: string;
+  @Column({ type: 'varchar', nullable: false })
+  full_name: string;
 
-  @Column({ type: 'date' })
-  dateOfBirth: Date;
+  @Column({ type: 'date', nullable: true })
+  date_of_birth?: Date;
 
   @Column({
     type: 'enum',
     enum: Gender,
+    nullable: false,
   })
   gender: Gender;
 
-  @Column({ length: 100, nullable: true })
-  email?: string;
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  phone_number?: string;
 
-  @Column({ length: 20 })
-  phone: string;
+  @Column({ type: 'varchar', nullable: true })
+  address?: string;
 
-  @Column({ type: 'text' })
-  address: string;
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  id_card?: string;
 
-  @Column({
-    type: 'enum',
-    enum: BloodGroup,
-    nullable: true,
-  })
-  bloodGroup?: BloodGroup;
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  health_insurance_number?: string;
 
-  @Column({ type: 'jsonb' })
-  emergencyContact: EmergencyContactDto;
+  @Column({ type: 'varchar', nullable: true })
+  relative_full_name?: string;
 
-  @Column({ type: 'text', nullable: true })
-  medicalHistory?: string;
-
-  @Column({ type: 'simple-array', nullable: true })
-  allergies?: string[];
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  relative_phone_number?: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
-
-  @DeleteDateColumn()
-  deletedAt?: Date;
+  updated_at: Date;
 }
