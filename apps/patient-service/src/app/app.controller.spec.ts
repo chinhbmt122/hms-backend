@@ -14,7 +14,6 @@ describe('AppController', () => {
     findOne: jest.fn(),
     update: jest.fn(),
     remove: jest.fn(),
-    restore: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -55,10 +54,6 @@ describe('AppController', () => {
 
     it('should have deletePatient method', () => {
       expect(controller.deletePatient).toBeDefined();
-    });
-
-    it('should have restorePatient method', () => {
-      expect(controller.restorePatient).toBeDefined();
     });
   });
 });
