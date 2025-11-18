@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Gender, BloodGroup, EmergencyContactDto } from './create-patient.dto';
+import { Gender } from './create-patient.dto';
 
 export class PatientResponseDto {
   @ApiProperty({
@@ -9,95 +9,84 @@ export class PatientResponseDto {
   id!: number;
 
   @ApiProperty({
-    description: 'First name of the patient',
-    example: 'Jane',
+    description: 'Account ID',
+    example: 1,
   })
-  firstName!: string;
+  account_id!: number;
 
   @ApiProperty({
-    description: 'Last name of the patient',
-    example: 'Smith',
+    description: 'Full name of the patient',
+    example: 'John Doe',
   })
-  lastName!: string;
+  full_name!: string;
 
   @ApiProperty({
     description: 'Date of birth',
     example: '1990-05-15',
+    required: false,
   })
-  dateOfBirth!: Date;
-
-  @ApiProperty({
-    description: 'Calculated age based on date of birth',
-    example: 33,
-  })
-  age!: number;
+  date_of_birth?: Date;
 
   @ApiProperty({
     description: 'Gender',
     enum: Gender,
-    example: Gender.FEMALE,
+    example: Gender.MALE,
   })
   gender!: Gender;
 
   @ApiProperty({
-    description: 'Email address',
-    example: 'jane.smith@example.com',
+    description: 'Phone number',
+    example: '+1234567890',
     required: false,
   })
-  email?: string;
-
-  @ApiProperty({
-    description: 'Primary phone number',
-    example: '+1234567890',
-  })
-  phone!: string;
+  phone_number?: string;
 
   @ApiProperty({
     description: 'Residential address',
     example: '123 Main Street, City, State 12345',
-  })
-  address!: string;
-
-  @ApiProperty({
-    description: 'Blood group',
-    enum: BloodGroup,
-    example: BloodGroup.O_POSITIVE,
     required: false,
   })
-  bloodGroup?: BloodGroup;
+  address?: string;
 
   @ApiProperty({
-    description: 'Emergency contact information',
-    type: EmergencyContactDto,
-  })
-  emergencyContact!: EmergencyContactDto;
-
-  @ApiProperty({
-    description: 'Medical history notes',
-    example: 'Diabetes Type 2, Hypertension',
+    description: 'ID card number',
+    example: '123456789',
     required: false,
   })
-  medicalHistory?: string;
+  id_card?: string;
 
   @ApiProperty({
-    description: 'List of known allergies',
-    example: ['Penicillin', 'Peanuts'],
-    type: [String],
+    description: 'Health insurance number',
+    example: 'INS123456',
     required: false,
   })
-  allergies?: string[];
+  health_insurance_number?: string;
+
+  @ApiProperty({
+    description: 'Full name of relative/emergency contact',
+    example: 'Jane Doe',
+    required: false,
+  })
+  relative_full_name?: string;
+
+  @ApiProperty({
+    description: 'Phone number of relative/emergency contact',
+    example: '+0987654321',
+    required: false,
+  })
+  relative_phone_number?: string;
 
   @ApiProperty({
     description: 'Record creation timestamp',
     example: '2024-10-23T10:30:00Z',
   })
-  createdAt!: Date;
+  created_at!: Date;
 
   @ApiProperty({
     description: 'Record last update timestamp',
     example: '2024-10-23T15:45:00Z',
   })
-  updatedAt!: Date;
+  updated_at!: Date;
 }
 
 class PaginationMeta {

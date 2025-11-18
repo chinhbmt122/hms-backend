@@ -1,17 +1,12 @@
 import {
   IsString,
   IsNotEmpty,
-  IsEmail,
   IsOptional,
   IsEnum,
   IsDateString,
-  MinLength,
+  IsInt,
   MaxLength,
-  IsObject,
-  ValidateNested,
-  IsArray,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum Gender {
@@ -20,156 +15,100 @@ export enum Gender {
   OTHER = 'OTHER',
 }
 
-export enum BloodGroup {
-  A_POSITIVE = 'A+',
-  A_NEGATIVE = 'A-',
-  B_POSITIVE = 'B+',
-  B_NEGATIVE = 'B-',
-  AB_POSITIVE = 'AB+',
-  AB_NEGATIVE = 'AB-',
-  O_POSITIVE = 'O+',
-  O_NEGATIVE = 'O-',
-}
-
-export class EmergencyContactDto {
-  @ApiProperty({
-    description: 'Full name of emergency contact person',
-    example: 'John Doe',
-    minLength: 2,
-    maxLength: 100,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(100)
-  name!: string;
-
-  @ApiProperty({
-    description: 'Phone number of emergency contact',
-    example: '+1234567890',
-  })
-  @IsString()
-  @IsNotEmpty()
-  phone!: string;
-
-  @ApiProperty({
-    description: 'Relationship to the patient',
-    example: 'Spouse',
-    minLength: 2,
-    maxLength: 50,
-  })
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(50)
-  relationship!: string;
-}
-
 export class CreatePatientDto {
   @ApiProperty({
-    description: 'First name of the patient',
-    example: 'Jane',
-    minLength: 2,
-    maxLength: 50,
+    description: 'Account ID of the patient',
+    example: 1,
   })
-  @IsString()
+  @IsInt()
   @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(50)
-  firstName!: string;
+  account_id!: number;
 
   @ApiProperty({
-    description: 'Last name of the patient',
-    example: 'Smith',
-    minLength: 2,
-    maxLength: 50,
+    description: 'Full name of the patient',
+    example: 'John Doe',
   })
   @IsString()
   @IsNotEmpty()
-  @MinLength(2)
-  @MaxLength(50)
-  lastName!: string;
+  full_name!: string;
 
   @ApiProperty({
     description: 'Date of birth in ISO 8601 format',
     example: '1990-05-15',
-    type: String,
+    required: false,
   })
   @IsDateString()
-  @IsNotEmpty()
-  dateOfBirth!: Date;
+  @IsOptional()
+  date_of_birth?: Date;
 
   @ApiProperty({
     description: 'Gender of the patient',
     enum: Gender,
-    example: Gender.FEMALE,
+    example: Gender.MALE,
   })
   @IsEnum(Gender)
   @IsNotEmpty()
   gender!: Gender;
 
   @ApiProperty({
-    description: 'Email address of the patient',
-    example: 'jane.smith@example.com',
-    required: false,
-  })
-  @IsEmail()
-  @IsOptional()
-  email?: string;
-
-  @ApiProperty({
-    description: 'Primary phone number',
+    description: 'Phone number',
     example: '+1234567890',
+    required: false,
+    maxLength: 20,
   })
   @IsString()
-  @IsNotEmpty()
-  phone!: string;
+  @MaxLength(20)
+  @IsOptional()
+  phone_number?: string;
 
   @ApiProperty({
-    description: 'Full residential address',
+    description: 'Residential address',
     example: '123 Main Street, City, State 12345',
-  })
-  @IsString()
-  @IsNotEmpty()
-  address!: string;
-
-  @ApiProperty({
-    description: 'Blood group of the patient',
-    enum: BloodGroup,
-    example: BloodGroup.O_POSITIVE,
-    required: false,
-  })
-  @IsEnum(BloodGroup)
-  @IsOptional()
-  bloodGroup?: BloodGroup;
-
-  @ApiProperty({
-    description: 'Emergency contact information',
-    type: EmergencyContactDto,
-  })
-  @IsObject()
-  @ValidateNested()
-  @Type(() => EmergencyContactDto)
-  @IsNotEmpty()
-  emergencyContact!: EmergencyContactDto;
-
-  @ApiProperty({
-    description: 'Medical history notes',
-    example: 'Diabetes Type 2, Hypertension',
     required: false,
   })
   @IsString()
   @IsOptional()
-  medicalHistory?: string;
+  address?: string;
 
   @ApiProperty({
-    description: 'List of known allergies',
-    example: ['Penicillin', 'Peanuts'],
-    type: [String],
+    description: 'ID card number',
+    example: '123456789',
+    required: false,
+    maxLength: 20,
+  })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  id_card?: string;
+
+  @ApiProperty({
+    description: 'Health insurance number',
+    example: 'INS123456',
+    required: false,
+    maxLength: 20,
+  })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  health_insurance_number?: string;
+
+  @ApiProperty({
+    description: 'Full name of relative/emergency contact',
+    example: 'Jane Doe',
     required: false,
   })
-  @IsArray()
-  @IsString({ each: true })
+  @IsString()
   @IsOptional()
-  allergies?: string[];
+  relative_full_name?: string;
+
+  @ApiProperty({
+    description: 'Phone number of relative/emergency contact',
+    example: '+0987654321',
+    required: false,
+    maxLength: 20,
+  })
+  @IsString()
+  @MaxLength(20)
+  @IsOptional()
+  relative_phone_number?: string;
 }

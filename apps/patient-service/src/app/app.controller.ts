@@ -39,9 +39,4 @@ export class AppController {
     await this.patientService.remove(id);
     return { success: true, message: 'Patient deleted successfully' };
   }
-
-  @MessagePattern(PatientMessages.RESTORE_PATIENT)
-  async restorePatient(@Payload() id: number) {
-    return await this.patientService.restore(id);
-  }
 }

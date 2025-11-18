@@ -38,8 +38,8 @@ export class PatientQueryDto {
   limit?: number = 10;
 
   @ApiProperty({
-    description: 'Search term for partial matching on firstName, lastName, email, or phone',
-    example: 'Jane',
+    description: 'Search term for partial matching on full_name or phone_number',
+    example: 'John',
     required: false,
   })
   @IsOptional()
@@ -58,13 +58,13 @@ export class PatientQueryDto {
 
   @ApiProperty({
     description: 'Field to sort by',
-    example: 'createdAt',
-    default: 'createdAt',
+    example: 'created_at',
+    default: 'created_at',
     required: false,
   })
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = 'created_at';
 
   @ApiProperty({
     description: 'Sort order',

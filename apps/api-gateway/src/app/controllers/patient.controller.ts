@@ -30,6 +30,7 @@ import {
   PatientResponseDto,
   PaginatedPatientResponseDto,
 } from '@hms-backend/dto';
+import { PatientMessages } from '@hms-backend/constants';
 
 @ApiTags('patients')
 @Controller('patients')
@@ -54,10 +55,6 @@ export class PatientController {
     description: 'Bad Request - Invalid input data',
   })
   @ApiResponse({
-    status: 409,
-    description: 'Conflict - Email already exists',
-  })
-  @ApiResponse({
     status: 500,
     description: 'Internal Server Error',
   })
@@ -66,7 +63,7 @@ export class PatientController {
   ): Promise<PatientResponseDto> {
     const result = await firstValueFrom(
       this.patientClient
-        .send('patient.create_patient', createPatientDto)
+        .send(PatientMessages.CREATE_PATIENT, createPatientDto)
         .pipe(
           timeout(5000),
           catchError((error) => {
@@ -100,7 +97,7 @@ export class PatientController {
     @Query(ValidationPipe) query: PatientQueryDto
   ): Promise<PaginatedPatientResponseDto> {
     const result = await firstValueFrom(
-      this.patientClient.send('patient.get_patients', query).pipe(
+      this.patientClient.send(PatientMessages.GET_PATIENTS, query).pipe(
         timeout(5000),
         catchError((error) => {
           throw new HttpException(
@@ -141,7 +138,7 @@ export class PatientController {
     @Param('id', ParseIntPipe) id: number
   ): Promise<PatientResponseDto> {
     const result = await firstValueFrom(
-      this.patientClient.send('patient.get_patient_by_id', id).pipe(
+      this.patientClient.send(PatientMessages.GET_PATIENT_BY_ID, id).pipe(
         timeout(5000),
         catchError((error) => {
           throw new HttpException(
@@ -180,10 +177,6 @@ export class PatientController {
     description: 'Patient not found',
   })
   @ApiResponse({
-    status: 409,
-    description: 'Conflict - Email already exists',
-  })
-  @ApiResponse({
     status: 500,
     description: 'Internal Server Error',
   })
@@ -193,7 +186,7 @@ export class PatientController {
   ): Promise<PatientResponseDto> {
     const result = await firstValueFrom(
       this.patientClient
-        .send('patient.update_patient', { id, dto: updatePatientDto })
+        .send(PatientMessages.UPDATE_PATIENT, { id, dto: updatePatientDto })
         .pipe(
           timeout(5000),
           catchError((error) => {
@@ -210,7 +203,7 @@ export class PatientController {
   @Delete(':id')
   @ApiOperation({
     summary: 'Delete patient',
-    description: 'Soft delete a patient record',
+    description: 'Delete a patient record permanently',
   })
   @ApiParam({
     name: 'id',
@@ -241,48 +234,7 @@ export class PatientController {
     @Param('id', ParseIntPipe) id: number
   ): Promise<{ success: boolean; message: string }> {
     const result = await firstValueFrom(
-      this.patientClient.send('patient.delete_patient', id).pipe(
-        timeout(5000),
-        catchError((error) => {
-          throw new HttpException(
-            error.message || 'Patient service unavailable',
-            error.statusCode || HttpStatus.INTERNAL_SERVER_ERROR
-          );
-        })
-      )
-    );
-    return result;
-  }
-
-  @Post(':id/restore')
-  @ApiOperation({
-    summary: 'Restore deleted patient',
-    description: 'Restore a soft-deleted patient record',
-  })
-  @ApiParam({
-    name: 'id',
-    type: Number,
-    description: 'Patient ID',
-    example: 1,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Patient restored successfully',
-    type: PatientResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Patient not found',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Internal Server Error',
-  })
-  async restorePatient(
-    @Param('id', ParseIntPipe) id: number
-  ): Promise<PatientResponseDto> {
-    const result = await firstValueFrom(
-      this.patientClient.send('patient.restore_patient', id).pipe(
+      this.patientClient.send(PatientMessages.DELETE_PATIENT, id).pipe(
         timeout(5000),
         catchError((error) => {
           throw new HttpException(
