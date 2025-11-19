@@ -23,18 +23,22 @@ A microservices-based hospital management system built with **Nx Monorepo**, **N
 ## ��� Tech Stack
 
 ### **Frameworks**
+
 - **Nx** - Monorepo build system
 - **NestJS** - Node.js framework (TypeScript)
 - **Spring Boot** - Java framework
 
 ### **Databases**
+
 - **PostgreSQL** - Primary database
 - **Redis** - Caching & sessions
 
 ### **Message Broker**
+
 - **RabbitMQ** - Inter-service communication
 
 ### **Tools**
+
 - **Docker** - Containerization
 - **TypeORM** - ORM for NestJS
 - **JPA/Hibernate** - ORM for Spring Boot
@@ -43,6 +47,7 @@ A microservices-based hospital management system built with **Nx Monorepo**, **N
 ---
 
 ## ��� Project Structure
+
 ```
 hms-backend/
 ├── .github/workflows/         # CI/CD pipelines
@@ -69,13 +74,13 @@ hms-backend/
 
 ### **Required Software**
 
-| Tool | Version | Installation |
-|------|---------|--------------|
-| **Node.js** | 20.x | [Download](https://nodejs.org/) |
-| **Java** | 21 | [Download](https://adoptium.net/) |
-| **Docker** | 24.x+ | [Download](https://www.docker.com/) |
-| **npm** | 10.x+ | Comes with Node.js |
-| **Git** | Latest | [Download](https://git-scm.com/) |
+| Tool        | Version | Installation                        |
+| ----------- | ------- | ----------------------------------- |
+| **Node.js** | 20.x    | [Download](https://nodejs.org/)     |
+| **Java**    | 21      | [Download](https://adoptium.net/)   |
+| **Docker**  | 24.x+   | [Download](https://www.docker.com/) |
+| **npm**     | 10.x+   | Comes with Node.js                  |
+| **Git**     | Latest  | [Download](https://git-scm.com/)    |
 
 ### **Verify Installation**
 
@@ -91,24 +96,27 @@ npm --version     # Should show 10.x.x
 ## ��� Getting Started
 
 ### **1. Clone the Repository**
+
 ```bash
 git clone https://github.com/chinhbmt122/hms-backend.git
 cd hms-backend
 ```
 
-
 ### **2. Install Dependencies**
+
 ```bash
 npm install
 ```
 
 This will install:
+
 - Nx CLI
 - NestJS dependencies
 - Development tools
 - Testing frameworks
 
 ### **3. Setup Environment Variables**
+
 ```bash
 # Copy example environment file
 cp .env.example .env
@@ -118,6 +126,7 @@ cp .env.example .env
 ```
 
 ### **4. Start Infrastructure**
+
 ```bash
 # Start all infrastructure services (PostgreSQL, Redis, RabbitMQ)
 docker-compose up -d
@@ -129,6 +138,7 @@ docker-compose ps
 ```
 
 ### **5. Start Development Servers**
+
 ```bash
 # Start all services in development mode
 npx nx run-many -t serve --all
@@ -139,6 +149,7 @@ npx nx serve patient-service
 ```
 
 ### **6. Verify Setup**
+
 ```bash
 # Check API Gateway health
 curl http://localhost:3000/api
@@ -151,7 +162,7 @@ curl -X POST http://localhost:3000/api/patients \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "Test",
-    "lastName": "User",
+    "lastName": "Account",
     "dateOfBirth": "1990-01-01",
     "gender": "MALE",
     "phone": "1234567890",
@@ -184,6 +195,7 @@ open http://localhost:5050
 The project uses a **modular Docker Compose structure** where each service has its own `docker-compose.yml` file, and the root compose file orchestrates all services centrally.
 
 **Structure:**
+
 ```
 hms-backend/
 ├── docker-compose.yml                          # Root orchestrator (uses 'include')
@@ -197,12 +209,14 @@ hms-backend/
 ```
 
 **Benefits:**
+
 - **Modularity**: Each service's infrastructure is self-contained
 - **Flexibility**: Start individual services or all together
 - **Maintainability**: Easy to update service-specific configurations
 - **Centralized Control**: Root compose file manages all services
 
 **Usage:**
+
 ```bash
 # Start all services from root (recommended)
 docker-compose up -d
@@ -222,19 +236,20 @@ docker-compose down
 
 ### **Services Overview**
 
-| Service | Port | Type | Description |
-|---------|------|------|-------------|
-| **API Gateway** | 3000 | HTTP Server | REST API endpoints for all services |
-| **Patient Service** | - | Microservice | RabbitMQ queue listener (NO HTTP port) |
-| **Auth Service** | 8081 | HTTP Server | Spring Boot authentication service |
-| **PostgreSQL (Patient)** | 5433 | Database | Patient data storage |
-| **PostgreSQL (Auth)** | 5434 | Database | Auth data storage |
-| **Redis** | 6379 | Cache | Session management & caching |
-| **RabbitMQ** | 5672 | Message Broker | Microservice communication |
-| **RabbitMQ Management** | 15672 | Web UI | Admin panel: http://localhost:15672 |
-| **pgAdmin** | 5050 | Web UI | DB management: http://localhost:5050 |
+| Service                  | Port  | Type           | Description                            |
+| ------------------------ | ----- | -------------- | -------------------------------------- |
+| **API Gateway**          | 3000  | HTTP Server    | REST API endpoints for all services    |
+| **Patient Service**      | -     | Microservice   | RabbitMQ queue listener (NO HTTP port) |
+| **Auth Service**         | 8081  | HTTP Server    | Spring Boot authentication service     |
+| **PostgreSQL (Patient)** | 5433  | Database       | Patient data storage                   |
+| **PostgreSQL (Auth)**    | 5434  | Database       | Auth data storage                      |
+| **Redis**                | 6379  | Cache          | Session management & caching           |
+| **RabbitMQ**             | 5672  | Message Broker | Microservice communication             |
+| **RabbitMQ Management**  | 15672 | Web UI         | Admin panel: http://localhost:15672    |
+| **pgAdmin**              | 5050  | Web UI         | DB management: http://localhost:5050   |
 
 **Credentials:**
+
 - PostgreSQL: `hospital` / `hospital123`
 - Redis: Password: `redis_hospital_pass_2024`
 - RabbitMQ: `hospital` / `rabbitmq_hospital_pass_2024`
@@ -243,6 +258,7 @@ docker-compose down
 ### **Docker Commands**
 
 **All Services (from root):**
+
 ```bash
 # Start all infrastructure (recommended)
 docker-compose up -d
@@ -269,6 +285,7 @@ docker-compose ps
 ```
 
 **Individual Service Management:**
+
 ```bash
 # Start only patient service database
 docker-compose -f apps/patient-service/docker-compose.yml up -d
@@ -284,6 +301,7 @@ docker-compose -f apps/patient-service/docker-compose.yml down
 ```
 
 **Network Management:**
+
 ```bash
 # Create the shared network (required before first run)
 docker network create hospital-network
@@ -296,6 +314,7 @@ docker network inspect hospital-network
 ```
 
 ### **Database Connection Strings**
+
 ```bash
 # Patient Database
 postgresql://hospital:hospital123@localhost:5433/patient_db
@@ -315,6 +334,7 @@ amqp://hospital:rabbitmq_hospital_pass_2024@localhost:5672
 ## ��� Development Workflow
 
 ### **Working on a Feature**
+
 ```bash
 # 1. Create feature branch
 git checkout -b feature/patient-registration
@@ -337,6 +357,7 @@ git push origin feature/patient-registration
 ```
 
 ### **Team Collaboration (Multiple Developers on Same Feature)**
+
 ```bash
 # Lead developer creates feature branch
 git checkout -b feature/patient-management
@@ -361,6 +382,7 @@ git pull --rebase origin feature/patient-management
 ## ���️ Creating New Services
 
 ### **Create NestJS Service**
+
 ```bash
 # Generate new NestJS application
 npx nx g @nx/nest:application apps/billing-service
@@ -386,6 +408,7 @@ npx nx serve billing-service
 ```
 
 ### **Create Spring Boot Service**
+
 ```bash
 # 1. Navigate to apps directory
 cd apps
@@ -445,6 +468,7 @@ npx nx serve billing-service
 ```
 
 ### **Create Shared Library**
+
 ```bash
 # Generate TypeScript library
 npx nx g @nx/js:library shared-utils --directory=libs/shared-utils
@@ -467,6 +491,7 @@ import { utilityFunction } from '@hms-backend/shared-utils';
 ## ��� Testing
 
 ### **Run Tests**
+
 ```bash
 # Test all projects
 npx nx run-many -t test --all
@@ -486,6 +511,7 @@ npx nx test patient-service --watch
 ```
 
 ### **Run Linting**
+
 ```bash
 # Lint all projects
 npx nx run-many -t lint --all
@@ -501,6 +527,7 @@ npx nx lint patient-service --fix
 ```
 
 ### **Run All Quality Checks**
+
 ```bash
 # Run lint + test for all affected projects
 npx nx affected -t lint test
@@ -520,11 +547,13 @@ The project uses **GitHub Actions** for CI. On every push/PR:
 4. ✅ Caches dependencies for faster runs
 
 **CI runs only on code changes, not on:**
+
 - Documentation updates (`.md` files)
 - Editor config changes (`.vscode`, `.editorconfig`)
 - Formatting config (`.prettierrc`)
 
 ### **View CI Status**
+
 ```bash
 # Check CI status on GitHub
 # Go to: Actions tab in your repository
@@ -537,6 +566,7 @@ gh run view [run-id]
 ### **Branch Protection**
 
 Branches `main` and `develop` are protected:
+
 - ✅ CI must pass before merge
 - ✅ Requires 1 approval
 - ✅ Must be up to date with base branch
@@ -546,6 +576,7 @@ Branches `main` and `develop` are protected:
 ## ���️ Useful Commands
 
 ### **Nx Commands**
+
 ```bash
 # View project graph (visualize dependencies)
 npx nx graph
@@ -568,6 +599,7 @@ npx nx reset
 ```
 
 ### **Development Commands**
+
 ```bash
 # Start service in development mode
 npx nx serve [service-name]
@@ -576,12 +608,13 @@ npx nx serve [service-name]
 npx nx build [service-name] --configuration=production
 
 # Generate code
-npx nx g @nx/nest:controller users --project=patient-service
-npx nx g @nx/nest:service users --project=patient-service
-npx nx g @nx/nest:module users --project=patient-service
+npx nx g @nx/nest:controller accounts --project=patient-service
+npx nx g @nx/nest:service accounts --project=patient-service
+npx nx g @nx/nest:module accounts --project=patient-service
 ```
 
 ### **Docker Quick Commands**
+
 ```bash
 # One-liner to restart everything
 docker-compose down && docker-compose up -d
@@ -599,6 +632,7 @@ docker exec -it redis redis-cli -a redis_hospital_pass_2024
 ## ��� Troubleshooting
 
 ### **Problem: Port already in use**
+
 ```bash
 # Find process using port
 lsof -i :3000  # macOS/Linux
@@ -612,6 +646,7 @@ taskkill /PID [PID] /F  # Windows
 ```
 
 ### **Problem: Docker containers won't start**
+
 ```bash
 # Check logs
 docker-compose logs [service-name]
@@ -630,6 +665,7 @@ docker system prune -a
 ```
 
 ### **Problem: Nx cache issues**
+
 ```bash
 # Clear Nx cache
 npx nx reset
@@ -640,6 +676,7 @@ npm install
 ```
 
 ### **Problem: Tests failing**
+
 ```bash
 # Clear Jest cache
 npx jest --clearCache
@@ -652,6 +689,7 @@ npx nx test [service-name] --verbose
 ```
 
 ### **Problem: Gradle issues (Java services)**
+
 ```bash
 # Clean and rebuild
 cd apps/auth-service
@@ -665,6 +703,7 @@ cd apps/auth-service
 ```
 
 ### **Problem: Database connection errors**
+
 ```bash
 # Verify PostgreSQL is running
 docker-compose ps postgres-patient
@@ -684,6 +723,7 @@ docker exec -it postgres-patient psql -U hospital -d patient_db
 ## ��� Additional Resources
 
 ### **Documentation**
+
 - [Nx Documentation](https://nx.dev)
 - [NestJS Documentation](https://docs.nestjs.com)
 - [Spring Boot Documentation](https://spring.io/projects/spring-boot)
@@ -691,10 +731,12 @@ docker exec -it postgres-patient psql -U hospital -d patient_db
 - [Docker Documentation](https://docs.docker.com)
 
 ### **Architecture Diagrams**
+
 - View project dependencies: `npx nx graph`
 - Infrastructure overview: See `docker-compose.yml`
 
 ### **Code Style**
+
 - **TypeScript/JavaScript**: Prettier + ESLint
 - **Java**: Google Java Style Guide
 - Run formatters: `npm run format`
@@ -712,6 +754,7 @@ docker exec -it postgres-patient psql -U hospital -d patient_db
 7. Merge when approved
 
 ### **Commit Message Format**
+
 ```
 feat(scope): add new feature
 fix(scope): fix bug
@@ -725,7 +768,6 @@ feat(patient): add patient registration endpoint
 fix(auth): resolve JWT token expiration issue
 docs(readme): update installation instructions
 ```
-
 
 ## ��� License
 

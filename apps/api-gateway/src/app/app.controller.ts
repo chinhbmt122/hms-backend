@@ -7,7 +7,7 @@ import { PatientMessages } from '@hms-backend/constants';
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    @Inject('AUTH_SERVICE') private readonly clientAuthService: ClientProxy,
+    @Inject('ACCOUNT_SERVICE') private readonly clientAuthService: ClientProxy,
     @Inject('EMAIL_SERVICE') private readonly clientEmailService: ClientProxy
   ) {}
 

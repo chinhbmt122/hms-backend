@@ -17,6 +17,8 @@
     "paths": {
       "@hms-backend/constants": ["libs/shared/constants/src/index.ts"],
       "@hms-backend/dto": ["libs/shared/dto/src/index.ts"],
+      "@hms-backend/shared": ["libs/shared/src/index.ts"],
+      "@hms-backend/shared-utils": ["libs/shared-utils/src/index.ts"],
       "@hms-backend/utils": ["libs/shared/utils/src/index.ts"]
     }
   },

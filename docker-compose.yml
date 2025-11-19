@@ -236,16 +236,20 @@ services:
         max-size: '10m'
         max-file: '3'
 
-  employee-service1:
-    container_name: employee-service1
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        APP_NAME: employee-service
-    networks:
-      - hospital-network
-
+  mysql:
+    image: mysql:latest
+    container_name: account_service_db
+    env_file:
+      - .env
+    environment:
+      MYSQL_DATABASE: ${ACCOUNT_DB_NAME}
+      MYSQL_PASSWORD: ${ACCOUNT_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${ACCOUNT_DB_PASSWORD}
+      MYSQL_USER: ${ACCOUNT_DB_USERNAME}
+    ports:
+      - '${ACCOUNT_DB_PORT}:3306'
+    volumes:
+      - account-mysql-data:/var/lib/mysql
 
 # ============================================
 # Named Volumes - Persistent Data Storage
@@ -270,6 +274,7 @@ volumes:
   pgadmin-data:
     name: hospital-pgadmin-data
     driver: local
+  account-mysql-data:
 
 # ============================================
 # Networks - Service Isolation

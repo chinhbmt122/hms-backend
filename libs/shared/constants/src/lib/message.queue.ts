@@ -1,6 +1,12 @@
-export const AuthMessages = {
-  GET_USERS: 'auth.get_users',
-  CREATE_USER: 'auth.create_user',
+export const AccountMessages = {
+  GET_USERS: 'auth.get_accounts',
+  CREATE_USER: 'auth.create_account',
+  CREATE_ACCOUNT: 'auth.create_accounts',
+  FIND_ALL_ACCOUNTS: 'auth.find_all_accounts',
+  FIND_ONE_ACCOUNT: 'auth.find_one_account',
+  UPDATE_ACCOUNT: 'auth.update_account',
+  RESTORE_ACCOUNT: 'auth.restore_account',
+  REMOVE_ACCOUNT: 'auth.remove_account',
 };
 
 export const PatientMessages = {

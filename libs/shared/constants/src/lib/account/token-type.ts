@@ -1,0 +1,5 @@
+export enum TokenType {
+  REFRESH_TOKEN,
+  FORGET_PASSWORD_TOKEN,
+  VERIFY_EMAIL_TOKEN,
+}
