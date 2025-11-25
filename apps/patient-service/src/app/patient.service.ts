@@ -25,16 +25,6 @@ export class PatientService {
    * Create a new patient
    */
   async create(dto: CreatePatientDto): Promise<PatientResponseDto> {
-    // Check for duplicate email if provided
-    if (dto.email) {
-      const existingPatient = await this.patientRepository.findOne({
-        where: { email: dto.email },
-      });
-      if (existingPatient) {
-        throw new DuplicatePatientException('email', dto.email);
-      }
-    }
-
     const patient = this.patientRepository.create(dto);
     const savedPatient = await this.patientRepository.save(patient);
     return this.toResponseDto(savedPatient);
@@ -46,25 +36,27 @@ export class PatientService {
   async findAll(
     query: PatientQueryDto
   ): Promise<PaginatedPatientResponseDto> {
-    const { page = 1, limit = 10, search, gender, sortBy = 'createdAt', sortOrder = 'DESC' } = query;
+    const { page = 1, limit = 10, search, gender, sortBy = 'created_at', sortOrder = 'DESC' } = query;
 
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.patientRepository
-      .createQueryBuilder('patient')
-      .where('patient.deletedAt IS NULL'); // Exclude soft-deleted records
+    const queryBuilder = this.patientRepository.createQueryBuilder('patient');
 
-    // Apply search filter (partial match on firstName, lastName, email, phone)
+    // Apply search filter (partial match on full_name or phone_number)
     if (search) {
-      queryBuilder.andWhere(
-        '(patient.firstName ILIKE :search OR patient.lastName ILIKE :search OR patient.email ILIKE :search OR patient.phone ILIKE :search)',
+      queryBuilder.where(
+        '(patient.full_name ILIKE :search OR patient.phone_number ILIKE :search)',
         { search: `%${search}%` }
       );
     }
 
     // Apply gender filter
     if (gender) {
-      queryBuilder.andWhere('patient.gender = :gender', { gender });
+      if (search) {
+        queryBuilder.andWhere('patient.gender = :gender', { gender });
+      } else {
+        queryBuilder.where('patient.gender = :gender', { gender });
+      }
     }
 
     // Apply sorting
@@ -116,16 +108,6 @@ export class PatientService {
       throw new PatientNotFoundException(id);
     }
 
-    // Check for duplicate email if being updated
-    if (dto.email && dto.email !== patient.email) {
-      const existingPatient = await this.patientRepository.findOne({
-        where: { email: dto.email },
-      });
-      if (existingPatient) {
-        throw new DuplicatePatientException('email', dto.email);
-      }
-    }
-
     Object.assign(patient, dto);
     const updatedPatient = await this.patientRepository.save(patient);
 
@@ -133,7 +115,7 @@ export class PatientService {
   }
 
   /**
-   * Soft delete a patient
+   * Delete a patient (hard delete)
    */
   async remove(id: number): Promise<void> {
     const patient = await this.patientRepository.findOne({
@@ -144,53 +126,7 @@ export class PatientService {
       throw new PatientNotFoundException(id);
     }
 
-    await this.patientRepository.softDelete(id);
-  }
-
-  /**
-   * Restore a soft-deleted patient
-   */
-  async restore(id: number): Promise<PatientResponseDto> {
-    const patient = await this.patientRepository.findOne({
-      where: { id },
-      withDeleted: true, // Include soft-deleted records
-    });
-
-    if (!patient) {
-      throw new PatientNotFoundException(id);
-    }
-
-    if (!patient.deletedAt) {
-      // Patient is not deleted, return as is
-      return this.toResponseDto(patient);
-    }
-
-    await this.patientRepository.restore(id);
-
-    const restoredPatient = await this.patientRepository.findOne({
-      where: { id },
-    });
-
-    return this.toResponseDto(restoredPatient!);
-  }
-
-  /**
-   * Calculate age from date of birth
-   */
-  private calculateAge(dateOfBirth: Date): number {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-
-    if (
-      monthDiff < 0 ||
-      (monthDiff === 0 && today.getDate() < birthDate.getDate())
-    ) {
-      age--;
-    }
-
-    return age;
+    await this.patientRepository.delete(id);
   }
 
   /**
@@ -199,20 +135,18 @@ export class PatientService {
   private toResponseDto(patient: Patient): PatientResponseDto {
     return {
       id: patient.id,
-      firstName: patient.firstName,
-      lastName: patient.lastName,
-      dateOfBirth: patient.dateOfBirth,
-      age: this.calculateAge(patient.dateOfBirth),
+      account_id: patient.account_id,
+      full_name: patient.full_name,
+      date_of_birth: patient.date_of_birth,
       gender: patient.gender,
-      email: patient.email,
-      phone: patient.phone,
+      phone_number: patient.phone_number,
       address: patient.address,
-      bloodGroup: patient.bloodGroup,
-      emergencyContact: patient.emergencyContact,
-      medicalHistory: patient.medicalHistory,
-      allergies: patient.allergies,
-      createdAt: patient.createdAt,
-      updatedAt: patient.updatedAt,
+      id_card: patient.id_card,
+      health_insurance_number: patient.health_insurance_number,
+      relative_full_name: patient.relative_full_name,
+      relative_phone_number: patient.relative_phone_number,
+      created_at: patient.created_at,
+      updated_at: patient.updated_at,
     };
   }
 }

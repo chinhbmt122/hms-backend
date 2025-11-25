@@ -7,14 +7,10 @@ import {
   CreatePatientDto,
   UpdatePatientDto,
   Gender,
-  BloodGroup,
   PatientQueryDto,
   SortOrder,
 } from '@hms-backend/dto';
-import {
-  PatientNotFoundException,
-  DuplicatePatientException,
-} from '../exceptions';
+import { PatientNotFoundException } from '../exceptions';
 
 describe('PatientService', () => {
   let service: PatientService;
@@ -22,24 +18,18 @@ describe('PatientService', () => {
 
   const mockPatient: Patient = {
     id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    dateOfBirth: new Date('1990-01-01'),
+    account_id: 1,
+    full_name: 'John Doe',
+    date_of_birth: new Date('1990-01-01'),
     gender: Gender.MALE,
-    email: 'john.doe@example.com',
-    phone: '1234567890',
+    phone_number: '+1234567890',
     address: '123 Main St',
-    bloodGroup: BloodGroup.O_POSITIVE,
-    emergencyContact: {
-      name: 'Jane Doe',
-      phone: '0987654321',
-      relationship: 'Spouse',
-    },
-    medicalHistory: 'No known conditions',
-    allergies: ['Peanuts'],
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    deletedAt: undefined,
+    id_card: '123456789',
+    health_insurance_number: 'INS123456',
+    relative_full_name: 'Jane Doe',
+    relative_phone_number: '+0987654321',
+    created_at: new Date(),
+    updated_at: new Date(),
   };
 
   const mockRepository = {
@@ -47,8 +37,7 @@ describe('PatientService', () => {
     save: jest.fn(),
     findOne: jest.fn(),
     find: jest.fn(),
-    softDelete: jest.fn(),
-    restore: jest.fn(),
+    delete: jest.fn(),
     createQueryBuilder: jest.fn(),
   };
 
@@ -74,68 +63,68 @@ describe('PatientService', () => {
   describe('create', () => {
     it('should create a new patient successfully', async () => {
       const createDto: CreatePatientDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        dateOfBirth: new Date('1990-01-01'),
+        account_id: 1,
+        full_name: 'John Doe',
+        date_of_birth: new Date('1990-01-01'),
         gender: Gender.MALE,
-        email: 'john.doe@example.com',
-        phone: '1234567890',
+        phone_number: '+1234567890',
         address: '123 Main St',
-        bloodGroup: BloodGroup.O_POSITIVE,
-        emergencyContact: {
-          name: 'Jane Doe',
-          phone: '0987654321',
-          relationship: 'Spouse',
-        },
-        allergies: ['Peanuts'],
+        id_card: '123456789',
+        health_insurance_number: 'INS123456',
+        relative_full_name: 'Jane Doe',
+        relative_phone_number: '+0987654321',
       };
 
-      mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(mockPatient);
       mockRepository.save.mockResolvedValue(mockPatient);
 
       const result = await service.create(createDto);
 
       expect(result).toBeDefined();
-      expect(result.firstName).toBe('John');
-      expect(result.lastName).toBe('Doe');
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { email: createDto.email },
-      });
+      expect(result.full_name).toBe('John Doe');
+      expect(result.account_id).toBe(1);
       expect(mockRepository.create).toHaveBeenCalledWith(createDto);
       expect(mockRepository.save).toHaveBeenCalled();
     });
 
-    it('should throw DuplicatePatientException if email already exists', async () => {
+    it('should create a patient with minimal required fields', async () => {
       const createDto: CreatePatientDto = {
-        firstName: 'John',
-        lastName: 'Doe',
-        dateOfBirth: new Date('1990-01-01'),
-        gender: Gender.MALE,
-        email: 'john.doe@example.com',
-        phone: '1234567890',
-        address: '123 Main St',
-        emergencyContact: {
-          name: 'Jane Doe',
-          phone: '0987654321',
-          relationship: 'Spouse',
-        },
+        account_id: 2,
+        full_name: 'Jane Smith',
+        gender: Gender.FEMALE,
       };
 
-      mockRepository.findOne.mockResolvedValue(mockPatient);
+      const minimalPatient = {
+        ...mockPatient,
+        id: 2,
+        account_id: 2,
+        full_name: 'Jane Smith',
+        gender: Gender.FEMALE,
+        phone_number: undefined,
+        address: undefined,
+        id_card: undefined,
+        health_insurance_number: undefined,
+        relative_full_name: undefined,
+        relative_phone_number: undefined,
+      };
 
-      await expect(service.create(createDto)).rejects.toThrow(
-        DuplicatePatientException
-      );
+      mockRepository.create.mockReturnValue(minimalPatient);
+      mockRepository.save.mockResolvedValue(minimalPatient);
+
+      const result = await service.create(createDto);
+
+      expect(result).toBeDefined();
+      expect(result.full_name).toBe('Jane Smith');
+      expect(result.account_id).toBe(2);
     });
   });
 
   describe('findAll', () => {
-    it('should return paginated patients', async () => {
+    it('should return paginated patients with default sorting', async () => {
       const query: PatientQueryDto = {
         page: 1,
         limit: 10,
-        sortBy: 'createdAt',
+        sortBy: 'created_at',
         sortOrder: SortOrder.DESC,
       };
 
@@ -156,6 +145,99 @@ describe('PatientService', () => {
       expect(result.meta.total).toBe(1);
       expect(result.meta.page).toBe(1);
       expect(result.meta.totalPages).toBe(1);
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith(
+        'patient.created_at',
+        'DESC'
+      );
+    });
+
+    it('should filter patients by search term', async () => {
+      const query: PatientQueryDto = {
+        page: 1,
+        limit: 10,
+        search: 'John',
+        sortBy: 'created_at',
+        sortOrder: SortOrder.DESC,
+      };
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[mockPatient], 1]),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const result = await service.findAll(query);
+
+      expect(result.data).toHaveLength(1);
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        '(patient.full_name ILIKE :search OR patient.phone_number ILIKE :search)',
+        { search: '%John%' }
+      );
+    });
+
+    it('should filter patients by gender', async () => {
+      const query: PatientQueryDto = {
+        page: 1,
+        limit: 10,
+        gender: Gender.MALE,
+        sortBy: 'created_at',
+        sortOrder: SortOrder.DESC,
+      };
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[mockPatient], 1]),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const result = await service.findAll(query);
+
+      expect(result.data).toHaveLength(1);
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'patient.gender = :gender',
+        { gender: Gender.MALE }
+      );
+    });
+
+    it('should filter by both search and gender', async () => {
+      const query: PatientQueryDto = {
+        page: 1,
+        limit: 10,
+        search: 'John',
+        gender: Gender.MALE,
+        sortBy: 'created_at',
+        sortOrder: SortOrder.DESC,
+      };
+
+      const mockQueryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([[mockPatient], 1]),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const result = await service.findAll(query);
+
+      expect(result.data).toHaveLength(1);
+      expect(mockQueryBuilder.where).toHaveBeenCalled();
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'patient.gender = :gender',
+        { gender: Gender.MALE }
+      );
     });
   });
 
@@ -167,6 +249,7 @@ describe('PatientService', () => {
 
       expect(result).toBeDefined();
       expect(result.id).toBe(1);
+      expect(result.full_name).toBe('John Doe');
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
     });
 
@@ -182,18 +265,44 @@ describe('PatientService', () => {
   describe('update', () => {
     it('should update a patient successfully', async () => {
       const updateDto: UpdatePatientDto = {
-        firstName: 'Jane',
+        full_name: 'Jane Doe',
+        phone_number: '+1999999999',
       };
 
-      const updatedPatient = { ...mockPatient, firstName: 'Jane' };
+      const updatedPatient = {
+        ...mockPatient,
+        full_name: 'Jane Doe',
+        phone_number: '+1999999999',
+        updated_at: new Date(),
+      };
 
-      mockRepository.findOne.mockResolvedValue(mockPatient);
+      mockRepository.findOne.mockResolvedValue({ ...mockPatient });
       mockRepository.save.mockResolvedValue(updatedPatient);
 
       const result = await service.update(1, updateDto);
 
-      expect(result.firstName).toBe('Jane');
+      expect(result.full_name).toBe('Jane Doe');
+      expect(result.phone_number).toBe('+1999999999');
       expect(mockRepository.save).toHaveBeenCalled();
+    });
+
+    it('should update only specified fields', async () => {
+      const updateDto: UpdatePatientDto = {
+        address: 'New Address',
+      };
+
+      const updatedPatient = {
+        ...mockPatient,
+        address: 'New Address',
+      };
+
+      mockRepository.findOne.mockResolvedValue({ ...mockPatient });
+      mockRepository.save.mockImplementation((patient) => Promise.resolve(patient));
+
+      const result = await service.update(1, updateDto);
+
+      expect(result.address).toBe('New Address');
+      expect(result.full_name).toBe('John Doe'); // Unchanged
     });
 
     it('should throw PatientNotFoundException if patient not found', async () => {
@@ -206,13 +315,14 @@ describe('PatientService', () => {
   });
 
   describe('remove', () => {
-    it('should soft delete a patient', async () => {
+    it('should hard delete a patient', async () => {
       mockRepository.findOne.mockResolvedValue(mockPatient);
-      mockRepository.softDelete.mockResolvedValue({ affected: 1, raw: {} });
+      mockRepository.delete.mockResolvedValue({ affected: 1, raw: {} });
 
       await service.remove(1);
 
-      expect(mockRepository.softDelete).toHaveBeenCalledWith(1);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(mockRepository.delete).toHaveBeenCalledWith(1);
     });
 
     it('should throw PatientNotFoundException if patient not found', async () => {
@@ -221,30 +331,7 @@ describe('PatientService', () => {
       await expect(service.remove(999)).rejects.toThrow(
         PatientNotFoundException
       );
-    });
-  });
-
-  describe('restore', () => {
-    it('should restore a soft-deleted patient', async () => {
-      const deletedPatient = { ...mockPatient, deletedAt: new Date() };
-
-      mockRepository.findOne
-        .mockResolvedValueOnce(deletedPatient)
-        .mockResolvedValueOnce(mockPatient);
-      mockRepository.restore.mockResolvedValue({ affected: 1, raw: {} });
-
-      const result = await service.restore(1);
-
-      expect(result).toBeDefined();
-      expect(mockRepository.restore).toHaveBeenCalledWith(1);
-    });
-
-    it('should throw PatientNotFoundException if patient not found', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
-
-      await expect(service.restore(999)).rejects.toThrow(
-        PatientNotFoundException
-      );
+      expect(mockRepository.delete).not.toHaveBeenCalled();
     });
   });
 });

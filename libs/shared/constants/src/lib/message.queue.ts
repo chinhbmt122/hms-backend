@@ -9,7 +9,6 @@ export const PatientMessages = {
   GET_PATIENT_BY_ID: 'patient.get_patient_by_id',
   UPDATE_PATIENT: 'patient.update_patient',
   DELETE_PATIENT: 'patient.delete_patient',
-  RESTORE_PATIENT: 'patient.restore_patient',
 };
 
 export const EmailMessages = {
