@@ -1,0 +1,46 @@
+{
+  "name": "auth-service",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/auth-service/src",
+  "targets": {
+    "build": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "build",
+        "cwd": "apps/auth-service"
+      }
+    },
+    "bootRun": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "bootRun"
+      }
+    },
+    "tasks": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "tasks"
+      }
+    },
+    "test": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "test"
+      }
+    },
+    "clean": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "clean"
+      }
+    },
+    "serve": {
+      "executor": "@nx/gradle:gradle",
+      "options": {
+        "taskName": "bootRun"
+      }
+    }
+  },
+  "tags": ["type:spring-boot", "scope:backend", "lang:java"]
+}
