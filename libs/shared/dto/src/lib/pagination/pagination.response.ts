@@ -18,6 +18,6 @@ export class PaginatedResult<T> {
   @ApiProperty({ isArray: true })
   data: T[];
 
-  @ApiProperty({ type: PaginatedMeta })
+  @ApiProperty({ type: () => PaginatedMeta })
   meta?: PaginatedMeta;
 }

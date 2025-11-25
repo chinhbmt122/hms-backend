@@ -31,6 +31,11 @@ import {
   PaginatedResult,
   QueryAccountDto,
   UpdateAccountDto,
+  LoginDto,
+  LoginResponseDto,
+  RefreshTokenDto,
+  TokenPairDto,
+  ChangePasswordDto,
 } from '@hms-backend/dto';
 import { AccountMessages, AccountStatus } from '@hms-backend/constants';
 import { enumToArray } from 'libs/shared/utils/src/index';
@@ -84,7 +89,59 @@ export class AccountController {
     }
   }
 
-  // --- 1. Tạo Account ---
+  // ==========================================
+  // Authentication Endpoints (Must come BEFORE :id routes)
+  // ==========================================
+
+  // --- 1. Login ---
+  @Post('login')
+  @ApiOperation({ summary: 'Login with email and password' })
+  async login(
+    @Body(ValidationPipe) loginDto: LoginDto
+  ): Promise<LoginResponseDto> {
+    return this.sendToMicroservice<LoginResponseDto>(
+      AccountMessages.LOGIN,
+      loginDto
+    );
+  }
+
+  // --- 2. Refresh Token ---
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  async refreshToken(
+    @Body(ValidationPipe) refreshTokenDto: RefreshTokenDto
+  ): Promise<TokenPairDto> {
+    return this.sendToMicroservice<TokenPairDto>(
+      AccountMessages.REFRESH_TOKEN,
+      refreshTokenDto
+    );
+  }
+
+  // --- 3. Logout ---
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout - revoke refresh token' })
+  async logout(
+    @Body(ValidationPipe) refreshTokenDto: RefreshTokenDto
+  ): Promise<{ message: string }> {
+    return this.sendToMicroservice<{ message: string }>(
+      AccountMessages.LOGOUT,
+      refreshTokenDto
+    );
+  }
+
+  // --- 4. Lấy Enum Account Status (Endpoint này không cần Microservice) ---
+  @Get('constants/account-status')
+  @ApiOperation({ summary: 'Get enum account status' })
+  @UseGuards() // Bỏ UseGuards để cho phép truy cập công khai nếu cần, hoặc giữ nguyên để yêu cầu token
+  getEnumAccountStatus() {
+    return enumToArray(AccountStatus);
+  }
+
+  // ==========================================
+  // Account CRUD Endpoints
+  // ==========================================
+
+  // --- 5. Tạo Account ---
   @Post()
   @ApiOperation({ summary: 'Create a new account' })
   @ApiBody({ type: CreateAccountDto })
@@ -101,7 +158,7 @@ export class AccountController {
     );
   }
 
-  // --- 2. Lấy danh sách Accounts (Phân trang) ---
+  // --- 6. Lấy danh sách Accounts (Phân trang) ---
   @Get()
   @ApiOperation({ summary: 'Get all accounts with pagination' })
   @ApiQuery({ type: QueryAccountDto })
@@ -118,7 +175,7 @@ export class AccountController {
     );
   }
 
-  // --- 3. Lấy Account theo ID ---
+  // --- 7. Lấy Account theo ID ---
   @Get(':id')
   @ApiOperation({ summary: 'Get account by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'Account ID' })
@@ -135,14 +192,6 @@ export class AccountController {
       AccountMessages.FIND_ONE_ACCOUNT,
       id
     );
-  }
-
-  // --- 4. Lấy Enum Account Status (Endpoint này không cần Microservice) ---
-  @ApiOperation({ summary: 'Get enum account status' })
-  @Get('/constants/account-status')
-  @UseGuards() // Bỏ UseGuards để cho phép truy cập công khai nếu cần, hoặc giữ nguyên để yêu cầu token
-  getEnumAccountStatus() {
-    return enumToArray(AccountStatus);
   }
 
   // --- 5. Cập nhật Account ---
@@ -173,11 +222,58 @@ export class AccountController {
     return this.sendToMicroservice<any>(AccountMessages.RESTORE_ACCOUNT, id);
   }
 
-  // --- 7. Xóa Account (Remove/Soft Delete) ---
+  // --- 10. Xóa Account (Remove/Soft Delete) ---
   @Delete(':id')
   @ApiOperation({ summary: 'Delete account by ID (Soft Delete)' })
   @ApiParam({ name: 'id', type: Number, description: 'Account ID' })
   async remove(@Param('id', ParseIntPipe) id: number): Promise<any> {
     return this.sendToMicroservice<any>(AccountMessages.REMOVE_ACCOUNT, id);
+  }
+
+  // ==========================================
+  // Advanced Auth Endpoints (with :id parameter)
+  // ==========================================
+
+  // --- 11. Logout All Devices ---
+  @Post(':id/logout-all')
+  @ApiOperation({ summary: 'Logout from all devices - revoke all refresh tokens' })
+  @ApiParam({ name: 'id', type: Number, description: 'Account ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Logged out from all devices successfully',
+  })
+  async logoutAll(
+    @Param('id', ParseIntPipe) id: number
+  ): Promise<{ message: string }> {
+    return this.sendToMicroservice<{ message: string }>(
+      AccountMessages.LOGOUT_ALL,
+      id
+    );
+  }
+
+  // --- 12. Change Password ---
+  @Post(':id/change-password')
+  @ApiOperation({ summary: 'Change password' })
+  @ApiParam({ name: 'id', type: Number, description: 'Account ID' })
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Password changed successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Current password is incorrect',
+  })
+  async changePassword(
+    @Param('id', ParseIntPipe) id: number,
+    @Body(ValidationPipe) changePasswordDto: ChangePasswordDto
+  ): Promise<{ message: string }> {
+    return this.sendToMicroservice<{ message: string }>(
+      AccountMessages.CHANGE_PASSWORD,
+      {
+        accountId: id,
+        dto: changePasswordDto,
+      }
+    );
   }
 }

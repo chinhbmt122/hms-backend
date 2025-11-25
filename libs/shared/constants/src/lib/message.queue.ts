@@ -7,6 +7,12 @@ export const AccountMessages = {
   UPDATE_ACCOUNT: 'auth.update_account',
   RESTORE_ACCOUNT: 'auth.restore_account',
   REMOVE_ACCOUNT: 'auth.remove_account',
+  // Authentication
+  LOGIN: 'auth.login',
+  REFRESH_TOKEN: 'auth.refresh_token',
+  LOGOUT: 'auth.logout',
+  LOGOUT_ALL: 'auth.logout_all',
+  CHANGE_PASSWORD: 'auth.change_password',
 };
 
 export const PatientMessages = {

@@ -10,19 +10,22 @@ import { ClientConstant } from '@hms-backend/constants';
 import { AccountModule } from './account.module';
 
 async function bootstrap() {
+  const port = parseInt(process.env.TCP_PORT || '3003', 10);
+  const host = process.env.TCP_HOST || '0.0.0.0';
+
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     AccountModule,
     {
       transport: Transport.TCP,
       options: {
-        port: 3003,
-        host: 'localhost',
+        port,
+        host,
       },
     }
   );
 
   await app.listen();
-  console.log(`Auth microservice listening`);
+  console.log(`Auth microservice listening on ${host}:${port}`);
 }
 
 bootstrap();

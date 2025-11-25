@@ -12,8 +12,8 @@ export class Patient {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ type: 'int', nullable: false })
-  account_id: number;
+  @Column({ type: 'int', nullable: true })
+  account_id?: number;
 
   @Column({ type: 'varchar', nullable: false })
   full_name: string;

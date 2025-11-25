@@ -16,29 +16,40 @@ import { Account } from '../entities/account.entity';
 import { IAccountService } from './i-accounts.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PasswordHashService } from './password-hash.service';
 
 @Injectable()
 export class AccountService implements IAccountService {
   constructor(
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
-    @Inject() private readonly accountsMapper: AccountMapper
+    @Inject() private readonly accountsMapper: AccountMapper,
+    private readonly passwordHashService: PasswordHashService
   ) {}
 
   /**
    *
    * @param createAccountDto
-   * @Step1 create account by account repository
-   * @Step2 return response dto by account mapper
+   * @Step1 hash password
+   * @Step2 create account by account repository
+   * @Step3 return response dto by account mapper
    * @returns
    */
   async create(
     createAccountDto: CreateAccountDto
   ): Promise<AccountResponseDto> {
-    //create account
-    const createdAccount = await this.accountRepository.save(createAccountDto);
+    // Hash password before saving
+    const hashedPassword = await this.passwordHashService.hashPassword(
+      createAccountDto.password
+    );
 
-    //mapping data to response dto
+    // Create account with hashed password
+    const createdAccount = await this.accountRepository.save({
+      ...createAccountDto,
+      password: hashedPassword,
+    });
+
+    // Mapping data to response dto
     return await this.accountsMapper.toResponseDto(createdAccount);
   }
 

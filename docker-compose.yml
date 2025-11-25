@@ -236,20 +236,126 @@ services:
         max-size: '10m'
         max-file: '3'
 
-  mysql:
-    image: mysql:latest
-    container_name: account_service_db
+  # ==========================================
+  # API Gateway - Main Entry Point
+  # ==========================================
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        APP_NAME: api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+
     env_file:
       - .env
+
     environment:
-      MYSQL_DATABASE: ${ACCOUNT_DB_NAME}
-      MYSQL_PASSWORD: ${ACCOUNT_DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${ACCOUNT_DB_PASSWORD}
-      MYSQL_USER: ${ACCOUNT_DB_USERNAME}
+      NODE_ENV: production
+      PORT: ${API_GATEWAY_PORT:-3000}
+      AUTH_SERVICE_HOST: auth-service
+      AUTH_SERVICE_PORT: 3003
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+
     ports:
-      - '${ACCOUNT_DB_PORT}:3306'
-    volumes:
-      - account-mysql-data:/var/lib/mysql
+      - '${API_GATEWAY_PORT:-3000}:3000'
+
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      patient-service:
+        condition: service_started
+
+    networks:
+      - hospital-network
+
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # ==========================================
+  # Auth Service - Authentication & Authorization
+  # ==========================================
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        APP_NAME: auth-service
+    container_name: auth-service
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      NODE_ENV: production
+      TCP_PORT: 3003
+      POSTGRES_HOST: postgres-auth
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${AUTH_DB_NAME}
+
+    depends_on:
+      postgres-auth:
+        condition: service_healthy
+
+    networks:
+      - hospital-network
+
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  # ==========================================
+  # Patient Service - Patient Management
+  # ==========================================
+  patient-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        APP_NAME: patient-service
+    container_name: patient-service
+    restart: unless-stopped
+
+    env_file:
+      - .env
+
+    environment:
+      NODE_ENV: production
+      POSTGRES_HOST: postgres-patient
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PATIENT_DB_NAME}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@rabbitmq:5672
+
+    depends_on:
+      postgres-patient:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    networks:
+      - hospital-network
+
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
 
 # ============================================
 # Named Volumes - Persistent Data Storage
@@ -274,7 +380,6 @@ volumes:
   pgadmin-data:
     name: hospital-pgadmin-data
     driver: local
-  account-mysql-data:
 
 # ============================================
 # Networks - Service Isolation

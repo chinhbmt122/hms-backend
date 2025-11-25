@@ -8,10 +8,10 @@ export class AccountResponseDto {
   @ApiProperty({ example: 'account@example.com' })
   email: string;
 
-  @ApiProperty({ type: () => Role })
+  @ApiProperty({ enum: Role })
   role: Role;
 
-  @ApiProperty()
+  @ApiProperty({ enum: AccountStatus })
   status: AccountStatus;
 
   @ApiProperty()

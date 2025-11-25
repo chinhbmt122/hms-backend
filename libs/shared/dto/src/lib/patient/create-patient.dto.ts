@@ -17,12 +17,13 @@ export enum Gender {
 
 export class CreatePatientDto {
   @ApiProperty({
-    description: 'Account ID of the patient',
+    description: 'Account ID of the patient (optional - not required for walk-in/elder patients)',
     example: 1,
+    required: false,
   })
   @IsInt()
-  @IsNotEmpty()
-  account_id!: number;
+  @IsOptional()
+  account_id?: number;
 
   @ApiProperty({
     description: 'Full name of the patient',

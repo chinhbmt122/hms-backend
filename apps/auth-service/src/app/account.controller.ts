@@ -6,17 +6,24 @@ import {
   PaginatedResult,
   QueryAccountDto,
   UpdateAccountDto,
+  LoginDto,
+  RefreshTokenDto,
+  ChangePasswordDto,
+  LoginResponseDto,
+  TokenPairDto,
 } from '@hms-backend/dto';
 import { AccountMessages } from '@hms-backend/constants';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { IAccountService } from '../services/i-accounts.service';
+import { AuthService } from '../services/auth.service';
 
 @ApiTags('Account')
 @Controller() // Bỏ 'api/accounts' vì microservice không dùng HTTP routes
 export class AccountController {
   constructor(
     @Inject('IAccountService')
-    private readonly accountsService: IAccountService
+    private readonly accountsService: IAccountService,
+    private readonly authService: AuthService
   ) {}
 
   @MessagePattern(AccountMessages.CREATE_ACCOUNT)
@@ -56,5 +63,46 @@ export class AccountController {
   async remove(@Payload() id: number) {
     this.accountsService.remove(id);
     return 1;
+  }
+
+  // ==========================================
+  // Authentication Endpoints
+  // ==========================================
+
+  @MessagePattern(AccountMessages.LOGIN)
+  async login(@Payload() loginDto: LoginDto): Promise<LoginResponseDto> {
+    return await this.authService.login(loginDto.email, loginDto.password);
+  }
+
+  @MessagePattern(AccountMessages.REFRESH_TOKEN)
+  async refreshToken(
+    @Payload() refreshTokenDto: RefreshTokenDto
+  ): Promise<TokenPairDto> {
+    return await this.authService.refreshTokens(
+      refreshTokenDto.refreshToken
+    );
+  }
+
+  @MessagePattern(AccountMessages.LOGOUT)
+  async logout(
+    @Payload() refreshTokenDto: RefreshTokenDto
+  ): Promise<{ message: string }> {
+    return await this.authService.logout(refreshTokenDto.refreshToken);
+  }
+
+  @MessagePattern(AccountMessages.LOGOUT_ALL)
+  async logoutAll(@Payload() accountId: number): Promise<{ message: string }> {
+    return await this.authService.logoutAll(accountId);
+  }
+
+  @MessagePattern(AccountMessages.CHANGE_PASSWORD)
+  async changePassword(
+    @Payload() data: { accountId: number; dto: ChangePasswordDto }
+  ): Promise<{ message: string }> {
+    return await this.authService.changePassword(
+      data.accountId,
+      data.dto.oldPassword,
+      data.dto.newPassword
+    );
   }
 }

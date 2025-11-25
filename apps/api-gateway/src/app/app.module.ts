@@ -31,8 +31,8 @@ import { AccountController } from './controllers/account.controller';
         name: 'ACCOUNT_SERVICE',
         transport: Transport.TCP,
         options: {
-          host: 'localhost',
-          port: 3003,
+          host: process.env.AUTH_SERVICE_HOST || 'localhost',
+          port: parseInt(process.env.AUTH_SERVICE_PORT || '3003', 10),
         },
       },
       {
